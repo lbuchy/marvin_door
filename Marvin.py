@@ -1,5 +1,8 @@
 from subprocess import Popen, PIPE, STDOUT
 
+import glob
+import os
+
 class SoundClip:
     file_path = ""
 
@@ -15,6 +18,10 @@ class Player:
 
     def AddClip(self, clip):
         self.queue.append(clip)
+
+    def AddClips(self,clips):
+        for each in clips:
+            self.AddClip(each)
 
     def Play(self):
         if self.IsPlaying():
@@ -39,13 +46,24 @@ class Player:
 
     def Reset(self):
         self.queue = []
-    
+
+def GetSoundClips(directory):
+    clips = []
+
+    path = directory + "/*.mp3"
+    files = glob.glob(path)
+    print files
+    for each in files:
+        if not os.path.exists(each):
+            continue
+        clips.append(SoundClip(each))
+    return clips
 
 def main():
-    sound_clip = SoundClip("/home/pi/marvin_door/clips/depressed.mp3")
+    marvin_clips = GetSoundClips("/home/pi/marvin_door/clips")
 
     p = Player()
-    p.AddClip(sound_clip)
+    p.AddClips(marvin_clips)
     p.Play()
     p.WaitUntilDone()
 
