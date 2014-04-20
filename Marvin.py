@@ -1,5 +1,10 @@
 from subprocess import Popen, PIPE, STDOUT
 
+from Accelerometer import Accelerometer
+from twisted.internet import reactor
+
+import random
+
 import glob
 import os
 
@@ -34,10 +39,15 @@ class Player:
     def IsPlaying(self):
         if self.subproc is None:
             return False
-        if self.subproc.poll() is None:
-            return False
-        else:
-            return True
+        # Check if subprocess exists, indicating playing
+        pid = self.subproc.pid
+        running = None
+        try:
+            os.kill(pid, 0)
+            running = True
+        except OSError as e:
+            running = False
+        return running
 
     def WaitUntilDone(self):
         if self.subproc is None:
@@ -47,25 +57,58 @@ class Player:
     def Reset(self):
         self.queue = []
 
+# Returns a list of all mp3 files in a given directory
 def GetSoundClips(directory):
     clips = []
 
     path = directory + "/*.mp3"
     files = glob.glob(path)
-    print files
     for each in files:
         if not os.path.exists(each):
             continue
         clips.append(SoundClip(each))
     return clips
 
-def main():
-    marvin_clips = GetSoundClips("/home/pi/marvin_door/clips")
+class AccelPlayer:
+    player = None
+    clips = None
 
-    p = Player()
-    p.AddClips(marvin_clips)
-    p.Play()
-    p.WaitUntilDone()
+    def __init__(self, player, clips):
+        self.player = player
+        self.clips = clips
+
+    # A callback function at attach to the accelerometer
+    def getData(self,x,y,z):
+        print("x:%d y:%d z:%d" % (x,y,z))
+        if not self.player:
+            return
+        if not self.clips:
+            return
+        if self.player.IsPlaying():
+            return
+        self._processData(x,y,z)
+
+    def _playRandomClip(self):
+        print("Playing Clip")
+        self.player.Reset()
+        random.shuffle(self.clips)
+        self.player.AddClip(self.clips[0])
+        self.player.Play()
+
+    def _processData(self,x,y,z):
+
+        # Implement this function to determine when to play
+        # a sound clip
+        if x < -20:
+            self._playRandomClip()
+
+def main():
+    marvin_clips = GetSoundClips("clips")
+
+    accel = Accelerometer(reactor, "/dev/ttyACM0")
+    accelPlayer = AccelPlayer(Player(), marvin_clips)
+    accel.setCallback(accelPlayer.getData)
+    reactor.run()
 
 if __name__ == "__main__":
     main()
