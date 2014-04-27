@@ -8,6 +8,40 @@ import random
 import glob
 import os
 
+from collections import deque
+
+class DataProcessor:
+
+    x = None
+    y = None
+    z = None
+
+    maxlen = 10
+
+    def __init__(self):
+        self.x = deque([0]*self.maxlen)
+        self.y = deque([0]*self.maxlen)
+        self.z = deque([0]*self.maxlen)
+    
+    def AddData(self,x, y, z):
+        self._AddToBuf(self.x, x)
+        self._AddToBuf(self.y, y)
+        self._AddToBuf(self.z, x)
+
+    def ShouldPlay(self):
+        # TODO: Set me up
+        lastVal = self.x[len(self.x) - 1]
+        if lastVal < -20:
+            return True
+        return False
+
+    def _AddToBuf(self, buf, val):
+        if len(buf) < self.maxlen:
+            buf.append(val)
+        else:
+            buf.pop()
+            buf.append(val)
+
 class SoundClip:
     file_path = ""
 
@@ -75,6 +109,7 @@ def GetSoundClips(directory):
 class AccelPlayer:
     player = None
     clips = None
+    processor = DataProcessor()
 
     def __init__(self, player, clips):
         self.player = player
@@ -99,11 +134,14 @@ class AccelPlayer:
         self.player.Play()
 
     def _processData(self,x,y,z):
-
+        self.processor.AddData(x,y,z)
+        bPlay = self.processor.ShouldPlay()
+        if bPlay:
+            self._playRandomClip() 
         # Implement this function to determine when to play
         # a sound clip
-        if x < -20:
-            self._playRandomClip()
+        #if x < -20:
+        #    self._playRandomClip()
 
 def main():
     marvin_clips = GetSoundClips("clips")
