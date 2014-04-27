@@ -31,7 +31,7 @@ class DataProcessor:
     def ShouldPlay(self):
         # TODO: Set me up
         lastVal = self.x[len(self.x) - 1]
-        if lastVal < -20:
+        if lastVal <  35:
             return True
         return False
 
