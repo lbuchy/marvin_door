@@ -31,7 +31,7 @@ class Player:
     def Play(self):
         if self.IsPlaying():
             return
-        cmd = ['/usr/bin/mpg123']
+        cmd = ['/usr/bin/mpg321']
         for each in self.queue:
             cmd.append(each.file_path)
         self.subproc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
@@ -40,14 +40,17 @@ class Player:
         if self.subproc is None:
             return False
         # Check if subprocess exists, indicating playing
-        pid = self.subproc.pid
-        running = None
-        try:
-            os.kill(pid, 0)
-            running = True
-        except OSError as e:
-            running = False
-        return running
+        ret = self.subproc.poll()
+        if (ret == None):
+            # Process still running
+	    return True
+        else:
+            #wait for process to die fully
+	    self.subproc.communicate()
+            self.subproc = None
+            return False
+        # Should never get here, but good practice
+        return False
 
     def WaitUntilDone(self):
         if self.subproc is None:
