@@ -3,6 +3,8 @@ from subprocess import Popen, PIPE, STDOUT
 from Accelerometer import Accelerometer
 from twisted.internet import reactor
 
+from LedStrip import LedStrip, RGB
+
 import random
 
 import glob
@@ -115,6 +117,7 @@ class AccelPlayer:
     player = None
     clips = None
     processor = DataProcessor()
+    leds = LedStrip()
 
     def __init__(self, player, clips):
         self.player = player
@@ -130,6 +133,7 @@ class AccelPlayer:
         #if self.player.IsPlaying():
         #    return
         self._processData(x,y,z)
+        return
 
     def _playRandomClip(self):
         print("Playing Clip")
@@ -140,13 +144,10 @@ class AccelPlayer:
 
     def _processData(self,x,y,z):
         self.processor.AddData(x,y,z)
+        self.leds.WriteStrip( [RGB(abs(x),abs(y),abs(z))] * 10 )
         bPlay = self.processor.ShouldPlay()
-        if bPlay:
+        if bPlay and not self.player.IsPlaying:
             self._playRandomClip() 
-        # Implement this function to determine when to play
-        # a sound clip
-        #if x < -20:
-        #    self._playRandomClip()
 
 def main():
     marvin_clips = GetSoundClips("clips")
