@@ -31,7 +31,10 @@ class DataProcessor:
     def ShouldPlay(self):
         # TODO: Set me up
         lastVal = self.x[len(self.x) - 1]
-        if lastVal <  35:
+        ###lastVal = self.z[len(self.z) - 1]
+	print lastVal;
+        ###if lastVal < -60:
+        if lastVal > 21:
             return True
         return False
 
@@ -65,7 +68,8 @@ class Player:
     def Play(self):
         if self.IsPlaying():
             return
-        cmd = ['/usr/bin/mpg321']
+        ###cmd = ['/usr/bin/mpg321']
+        cmd = ['/home/pi/marvin_door/LedTalker.sh']
         for each in self.queue:
             cmd.append(each.file_path)
         self.subproc = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
@@ -75,6 +79,7 @@ class Player:
             return False
         # Check if subprocess exists, indicating playing
         ret = self.subproc.poll()
+	print ret
         if (ret == None):
             # Process still running
 	    return True
@@ -122,8 +127,8 @@ class AccelPlayer:
             return
         if not self.clips:
             return
-        if self.player.IsPlaying():
-            return
+        #if self.player.IsPlaying():
+        #    return
         self._processData(x,y,z)
 
     def _playRandomClip(self):
